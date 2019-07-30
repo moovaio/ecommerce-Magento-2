@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <section id="carriers" translate="label" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
+            <group id="moova" translate="label" type="text" sortOrder="400" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Envios MOOVA</label>
+                <field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Habilitado</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Título</label>
+                </field>
+                <field id="description" translate="label" type="textarea" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Descripción</label>
+                </field>
+                <field id="showmethod" translate="label" type="select" sortOrder="920" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Mostrar mensaje de método no disponible en el checkout</label>
+                    <frontend_class>shipping-skip-hide</frontend_class>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Cumoova esta opción este en <strong>SÍ</strong> y el método de envío tenga un error, lo mostrará en el checkout con su correspondiente mensaje (por ejemplo: "No existe cotización para el código postal ingresado"). En caso de estar seleccionado <strong>NO</strong>, y el método de envío tenga un error, éste no será mostrado en el checkout.]]></comment>
+                </field>
+                <field id="max_package_weight" translate="label" type="select" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Peso máximo habilitado</label>
+                    <source_model>Improntus\Moova\Model\Source\PesoMaximo</source_model>
+                </field>
+            </group>
+        </section>
+        <section id="shipping" translate="label" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
+            <group id="moova_webservice" translate="label" type="text" sortOrder="400" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Configuración de webservices MOOVA</label>
+                <field id="url" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>API url</label>
+                    <validate>required-entry</validate>
+                    <comment>La url ingresada debe terminar en "/"</comment>
+                </field>
+                <field id="app_id" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Application ID</label>
+                    <validate>required-entry</validate>
+                </field>
+                <field id="secret_key" translate="label" type="password" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Secret key</label>
+                    <validate>required-entry</validate>
+                </field>
+                <group id="from" translate="label" type="text" sortOrder="400" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Dirección de despacho</label>
+                    <field id="street" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Calle</label>
+                        <validate>required-entry</validate>
+                    </field>
+                    <field id="number" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Número</label>
+                        <validate>required-entry validate-number</validate>
+                    </field>
+                    <field id="floor" translate="label" type="text" sortOrder="32" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Piso</label>
+                    </field>
+                    <field id="apartment" translate="label" type="text" sortOrder="34" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Departamento</label>
+                    </field>
+                    <field id="postcode" translate="label" type="text" sortOrder="34" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Código postal</label>
+                        <validate>required-entry validate-number</validate>
+                    </field>
+                    <field id="city" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Ciudad</label>
+                        <validate>required-entry</validate>
+                    </field>
+                    <field id="state" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Provincia</label>
+                        <validate>required-entry</validate>
+                    </field>
+                    <field id="instructions" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Observaciones</label>
+                    </field>
+                </group>
+            </group>
+        </section>
+    </system>
+</config>

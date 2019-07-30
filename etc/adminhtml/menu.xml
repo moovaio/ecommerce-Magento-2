@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../../Magento/Backend/etc/menu.xsd">
+    <menu>
+        <add id="Improntus_Moova::menuPrincipal" title="Envíos Moova" module="Magento_Config" sortOrder="70" resource="Magento_Config::brand"/>
+        <add id="Improntus_Moova::settings" title="Configuración" module="Improntus_Moova" parent="Improntus_Moova::menuPrincipal" action="adminhtml/system_config/edit/section/shipping/webservice_moova" resource="Improntus_Moova::settings" sortOrder="120"/>
+        <add id="Improntus_Moova::carriers" title="Métodos de envío" module="Improntus_Moova" parent="Improntus_Moova::menuPrincipal" action="adminhtml/system_config/edit/section/carriers/moova_bicicleta" resource="Improntus_Moova::carriers" sortOrder="130"/>
+        <!--<add id="Improntus_Moova::cuenta_corriente" title="Cuenta corriente" module="Improntus_Moova" parent="Improntus_Moova::menuPrincipal" action="moova/cuentacorriente/index" resource="Improntus_Moova::cuenta_corriente" sortOrder="140"/>-->
+    </menu>
+</config>
