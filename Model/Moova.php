@@ -119,12 +119,6 @@ class Moova
             $itemsArray = [];
             $itemsWsMoova = [];
 
-            $dimensiones = [
-                'moova_alto'  => 0,
-                'moova_ancho' => 0,
-                'moova_largo' => 0
-            ];
-
             foreach ($order->getAllItems() AS $orderItem)
             {
                 if (!$orderItem->getQtyToShip() || $orderItem->getIsVirtual()) {
@@ -162,7 +156,8 @@ class Moova
                 $itemsWsMoova[] = [
                     'description' => $orderItem->getName(),
                     'price'     => $orderItem->getPrice(),
-                    'weight'    => $qtyShipped * ($orderItem->getWeight() * 1000),
+                    'quantity'  => $qtyShipped,
+                    'weight'    => ($orderItem->getWeight() * 1000), //gramos
                     'length'    => $moovaAlto,
                     'width'     => $moovaLargo,
                     'height'    => $moovaAncho
@@ -190,7 +185,6 @@ class Moova
             $countryInfo = $this->_country->loadByCode($countryId);
 
             $shippingParams = [
-                'scheduledDate' => '',
                 'currency'      => $order->getStoreCurrencyCode(),
                 'type'          => 'regular',
                 'flow'          => 'manual',
@@ -253,7 +247,9 @@ class Moova
                 return false;
             }
 
-            $mensajeEstado = __('La solicitud de retiro moova fue creada correctamente.');
+            $trackingMoova = substr($shipmentMoova['id'],0,8);
+            $mensajeEstado = __('La solicitud de retiro moova fue creada correctamente. Código de seguimiento Moova: %1',$trackingMoova);
+
             $history = $order->addStatusHistoryComment($mensajeEstado);
             $history->setIsVisibleOnFront(true);
             $history->setIsCustomerNotified(true);
@@ -267,7 +263,7 @@ class Moova
                 $shipment->getStoreId()
             );
 
-//            $this->addTrackingNumbersToShipment($shipment, [$shipmentMoova['id']], $carrierCode, $carrierTitle);
+            $this->addTrackingNumbersToShipment($shipment, [$trackingMoova], $carrierCode, $carrierTitle);
 
             $shipment->setCustomerNote(\Zend_Json::encode($shipmentMoova));
             $shipment->setCustomerNoteNotify(false);

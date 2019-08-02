@@ -111,6 +111,7 @@ class Data extends AbstractHelper
      * @param $path
      * @param $params
      * @return string
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
     public function getStoreUrl($path,$params)
     {

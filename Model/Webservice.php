@@ -3,7 +3,6 @@
 namespace Improntus\Moova\Model;
 
 use Magento\Checkout\Model\Session as CheckoutSession;
-use Magento\Directory\Model\Region;
 use Improntus\Moova\Helper\Data as HelperMoova;
 
 /**
@@ -51,17 +50,14 @@ class Webservice
     /**
      * Webservice constructor.
      * @param CheckoutSession $checkoutSession
-     * @param Region $region
      * @param HelperMoova $helperMoova
      */
     public function __construct(
         CheckoutSession $checkoutSession,
-        Region $region,
         HelperMoova $helperMoova
     )
     {
         $this->_checkoutSession = $checkoutSession;
-        $this->_region = $region;
         $this->_helper = $helperMoova;
 
         $this->_appId = $helperMoova->getAppId();
@@ -89,8 +85,6 @@ class Webservice
         ]);
 
         $response = curl_exec($curl);
-
-        \Improntus\Moova\Helper\Data::log(print_r($shippingParams,true) ,'debug_moova_'.date('m_Y').'.log');
 
         if(curl_error($curl))
         {
@@ -228,6 +222,43 @@ class Webservice
     public function trackShipment($shipmentId)
     {
         $curl = curl_init();
+
+        curl_setopt_array($curl,
+            [
+                CURLOPT_URL => "{$this->_apiUrl}b2b/shippings/$shipmentId?appId={$this->_appId}",
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => "",
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 30,
+                CURLOPT_CUSTOMREQUEST => "GET",
+                CURLOPT_HTTPHEADER => [
+                    "Authorization: {$this->_secretKey}",
+                    "Content-Type: application/json"
+                ],
+            ]);
+
+        $response = curl_exec($curl);
+
+        if(curl_error($curl))
+        {
+            $error = 'Se produjo un error al solicitar cotización: '. curl_error($curl);
+            \Improntus\Moova\Helper\Data::log($error ,'error_moova_'.date('m_Y').'.log');
+
+            return false;
+        }
+
+        try{
+            $shipment = \Zend_Json::decode($response);
+
+            return $shipment;
+        }
+        catch (\Exception $e)
+        {
+            $error = 'Se produjo un error al solicitar cotización: '. $e->getMessage() . ' Response: '. print_r($response,true);
+            \Improntus\Moova\Helper\Data::log($error ,'error_moova_'.date('m_Y').'.log');
+
+            return false;
+        }
 
     }
 }
