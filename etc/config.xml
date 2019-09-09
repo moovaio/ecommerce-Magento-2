@@ -14,6 +14,10 @@
         <shipping>
             <moova_webservice>
                 <url>https://api-dev.moova.io/</url>
+                <dashboard_url>https://dashboard.moova.io/</dashboard_url>
+                <tracking>
+                    <url>https://dashboard.moova.io/external?id=</url>
+                </tracking>
             </moova_webservice>
         </shipping>
         <customer>

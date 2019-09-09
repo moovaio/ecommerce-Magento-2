@@ -6,6 +6,8 @@ use Magento\Store\Model\StoreManagerInterface;
 use Magento\Sales\Model\Order;
 use Magento\Framework\Url;
 use Magento\Framework\UrlInterface;
+use Improntus\Moova\Model\Webservice;
+use Improntus\Moova\Helper\Data as DataMoova;
 
 /**
  * Class Context
@@ -26,6 +28,16 @@ class Context
     protected $_backendUrl;
 
     /**
+     * @var \Magento\Shipping\Helper\Data
+     */
+    protected $_helper;
+
+    /**
+     * @var \Improntus\Moova\Helper\Data
+     */
+    protected $_helperMoova;
+
+    /**
      * Context constructor.
      * @param StoreManagerInterface $storeManagerInterface
      * @param Order $order
@@ -36,13 +48,17 @@ class Context
         StoreManagerInterface $storeManagerInterface,
         Order $order,
         Url $frontendUrl,
-        UrlInterface $urlInterface
+        UrlInterface $urlInterface,
+        Webservice $webservice,
+        DataMoova $helperMoova
     )
     {
         $this->_storeManagerInterface  = $storeManagerInterface;
         $this->_order                  = $order;
         $this->_frontendUrl            = $frontendUrl;
         $this->_backendUrl             = $urlInterface;
+        $this->_moovaWs                = $webservice;
+        $this->_helperMoova            = $helperMoova;
     }
 
     /**
@@ -95,6 +111,31 @@ class Context
                         ]
                     );
 
+                }
+
+                $shipmentId = $this->_helperMoova->getStatusFromUrlTracking($order);
+                $shippinStatusMoova = null;
+
+                if(isset($shipmentId))
+                {
+                    $trackingInfo = $this->_moovaWs->trackShipment($shipmentId);
+                    $shippinStatusMoova = isset($trackingInfo['status']) ? $trackingInfo['status'] : null;
+                }
+
+                if(isset($shippinStatusMoova))
+                {
+                    if($shippinStatusMoova == 'DRAFT'){
+                        $baseUrl = $this->_backendUrl->getUrl('moova/status/enviar',['moova_id' =>$shipmentMoovaInfo['id'], 'status' => 'READY']);
+
+                        $buttonList->add(
+                            'listo_para_ser_entregado',
+                            [
+                                'label'     => __('Listo para ser entregado'),
+                                'onclick' => "setLocation('{$baseUrl}')",
+                                'class'     => 'primary'
+                            ]
+                        );
+                    }
                 }
             }
         }

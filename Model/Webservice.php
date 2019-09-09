@@ -65,6 +65,11 @@ class Webservice
         $this->_apiUrl = $helperMoova->getApiUrl();
     }
 
+    /**
+     * @param $shippingParams
+     * @param $type
+     * @return bool|null
+     */
     public function getBudget($shippingParams,$type)
     {
         $curl = curl_init();
@@ -122,6 +127,10 @@ class Webservice
         }
     }
 
+    /**
+     * @param $shippingParams
+     * @return bool|mixed
+     */
     public function newShipment($shippingParams)
     {
         $curl = curl_init();
@@ -219,6 +228,10 @@ class Webservice
         }
     }
 
+    /**
+     * @param $shipmentId
+     * @return bool|mixed
+     */
     public function trackShipment($shipmentId)
     {
         $curl = curl_init();
@@ -260,5 +273,102 @@ class Webservice
             return false;
         }
 
+    }
+
+    /**
+     * @param $shipmentId
+     * @return bool|mixed
+     */
+    public function getShipment($shipmentId)
+    {
+        $curl = curl_init();
+
+        curl_setopt_array($curl,
+            [
+                CURLOPT_URL => "{$this->_apiUrl}b2b/shippings/$shipmentId?appId={$this->_appId}",
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => "",
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 30,
+                CURLOPT_CUSTOMREQUEST => "GET",
+                CURLOPT_HTTPHEADER => [
+                    "Authorization: {$this->_secretKey}",
+                    "Content-Type: application/json"
+                ],
+            ]);
+
+        $response = curl_exec($curl);
+
+        if(curl_error($curl))
+        {
+            $error = 'Se produjo un error al solicitar cotización: '. curl_error($curl);
+            \Improntus\Moova\Helper\Data::log($error ,'error_moova_'.date('m_Y').'.log');
+
+            return false;
+        }
+
+        try{
+            $shipment = \Zend_Json::decode($response);
+
+            return $shipment;
+        }
+        catch (\Exception $e)
+        {
+            $error = 'Se produjo un error al solicitar cotización: '. $e->getMessage() . ' Response: '. print_r($response,true);
+            \Improntus\Moova\Helper\Data::log($error ,'error_moova_'.date('m_Y').'.log');
+
+            return false;
+        }
+    }
+
+    /**
+     * @param $shipmentId
+     * @param string $status
+     * @return bool
+     */
+    public function sendStatusShipment($shipmentId, $status = 'READY')
+    {
+        $curl = curl_init();
+
+        curl_setopt_array($curl,
+            [
+                CURLOPT_URL => "{$this->_apiUrl}b2b/shippings/$shipmentId/$status?appId={$this->_appId}",
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => "",
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 30,
+                CURLOPT_CUSTOMREQUEST => "POST",
+                CURLOPT_HTTPHEADER => [
+                    "Authorization: {$this->_secretKey}",
+                    "Content-Type: application/json"
+                ],
+            ]);
+
+        $response = curl_exec($curl);
+
+        $response_json = json_decode($response);
+
+        if(curl_error($curl) || strtolower($response_json->status) == 'error')
+        {
+            $error = 'Se produjo un error al intentar enviar el estatus: '. curl_error($curl);
+            \Improntus\Moova\Helper\Data::log($error ,'error_moova_'.date('m_Y').'.log');
+
+            return false;
+        }
+
+        try{
+            if(strtolower($response_json->status) == 'ready'){
+                return true;
+            }else{
+                return false;
+            }
+        }
+        catch (\Exception $e)
+        {
+            $error = 'Se produjo un error al intentar enviar el status: '. $e->getMessage() . ' Response: '. print_r($response,true);
+            \Improntus\Moova\Helper\Data::log($error ,'error_moova_'.date('m_Y').'.log');
+
+            return false;
+        }
     }
 }

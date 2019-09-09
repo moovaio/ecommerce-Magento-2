@@ -12,4 +12,6 @@
     <type name="Magento\Customer\Model\ResourceModel\AddressRepository">
         <plugin name="Improntus_Moova::AddressRepository" type="Improntus\Moova\Plugin\Customer\AddressRepositoryPlugin" sortOrder="100"/>
     </type>
+    <preference for="Magento\Shipping\Helper\Data" type="Improntus\Moova\Helper\Shipping\Data"/>
+    <preference for="Magento\Shipping\Block\Items" type="Improntus\Moova\Block\Items"/>
 </config>

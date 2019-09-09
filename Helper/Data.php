@@ -6,6 +6,7 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Directory\Model\Region;
+use Magento\Shipping\Helper\Data as ShippingData;
 
 /**
  * Class Data
@@ -56,6 +57,11 @@ class Data extends AbstractHelper
     protected $quoteRepository;
 
     /**
+     * @var \Magento\Shipping\Helper\Data
+     */
+    protected $_shippingData;
+
+    /**
      * Data constructor.
      * @param ScopeConfigInterface $scopeConfig
      * @param StoreManagerInterface $storeManagerInterface
@@ -72,7 +78,8 @@ class Data extends AbstractHelper
         \Magento\Checkout\Model\Session $checkoutSession,
         \Psr\Log\LoggerInterface $logger,
         \Magento\Framework\DataObject\Copy\Config $fieldsetConfig,
-        \Magento\Quote\Api\CartRepositoryInterface $cartRepository
+        \Magento\Quote\Api\CartRepositoryInterface $cartRepository,
+        ShippingData $shippingHelper
     ) {
         $this->_scopeConfig             = $scopeConfig;
         $this->_storeManagerInterface   = $storeManagerInterface;
@@ -81,6 +88,7 @@ class Data extends AbstractHelper
         $this->fieldsetConfig           = $fieldsetConfig;
         $this->logger                   = $logger;
         $this->quoteRepository          = $cartRepository;
+        $this->_shippingData            = $shippingHelper;
     }
 
     /**
@@ -209,6 +217,29 @@ class Data extends AbstractHelper
     public function setMoovaQuoteId($moovaQuoteId)
     {
         $this->_checkoutSession->setMoovaQuoteId($moovaQuoteId);
+    }
+
+    public function getStatusFromUrlTracking($order){
+        $url = $this->_shippingData->getTrackingPopupUrlBySalesModel($order);
+
+        $query = parse_url($url, PHP_URL_QUERY);
+        $queries = array();
+        $shipmentId = null;
+        parse_str($query, $queries);
+
+        if(isset($queries['id'])){
+            $shipmentId = $queries['id'];
+        }
+
+        return $shipmentId;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getHabilitadoMostrarEstadoEnvio()
+    {
+        return $this->_scopeConfig->getValue('shipping/moova_webservice/tracking/enable_status',\Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 }
 

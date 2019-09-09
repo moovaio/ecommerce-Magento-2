@@ -34,6 +34,11 @@
                     <validate>required-entry</validate>
                     <comment>La url ingresada debe terminar en "/"</comment>
                 </field>
+                <field id="dashboard_url" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Dashboard url</label>
+                    <validate>required-entry</validate>
+                    <comment>La url ingresada debe terminar en "/"</comment>
+                </field>
                 <field id="app_id" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Application ID</label>
                     <validate>required-entry</validate>
@@ -72,6 +77,17 @@
                     </field>
                     <field id="instructions" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Observaciones</label>
+                    </field>
+                </group>
+                <group id="tracking" translate="label" type="text" sortOrder="500" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Tracking Url y Estado de Envio</label>
+                    <field id="url" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Url para trackeo</label>
+                        <comment>A esta url se le incluira el número de envio</comment>
+                    </field>
+                    <field id="enable_status" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Visualizar estado del envio</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     </field>
                 </group>
             </group>

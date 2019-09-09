@@ -229,7 +229,7 @@ class Moova
                     ],
                     'message'       => ''
                 ],
-                'internalCode'  => '',
+                'internalCode'  => $order->getIncrementId(),
                 'comments'      => '',
                 'extra'         => [],
                 'conf' =>
@@ -316,5 +316,14 @@ class Moova
     public function getShippingLabel($shipmentIdMoova)
     {
         return $this->_webService->getShipmentLabel($shipmentIdMoova);
+    }
+
+    /**
+     * @param string $shipmentIdMoova
+     * @return bool|mixed
+     */
+    public function sendStatusShipment($shipmentIdMoova, $status)
+    {
+        return $this->_webService->sendStatusShipment($shipmentIdMoova, $status);
     }
 }
