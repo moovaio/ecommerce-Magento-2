@@ -356,9 +356,9 @@ class Moova extends AbstractCarrierOnline implements CarrierInterface
 
                 if(isset($address['address']) && isset($address['address']['custom_attributes']))
                 {
-                    $altura =  $address['address']['custom_attributes']['altura'];
-                    $piso =  $address['address']['custom_attributes']['piso'];
-                    $departamento =  $address['address']['custom_attributes']['departamento'];
+                    $altura =  isset($address['address']['custom_attributes']['altura']) ? $address['address']['custom_attributes']['altura'] : null;
+                    $piso =  isset($address['address']['custom_attributes']['piso']) ? $address['address']['custom_attributes']['piso'] : null;
+                    $departamento =  isset($address['address']['custom_attributes']['departamento']) ? $address['address']['custom_attributes']['departamento'] : null;
 
                     if(is_array($altura))
                     {
@@ -373,6 +373,27 @@ class Moova extends AbstractCarrierOnline implements CarrierInterface
                     if(is_array($departamento))
                     {
                         $departamento = $departamento['value'];
+                    }
+
+                    if($altura == null && $piso == null && $departamento == null && is_array($address['address']['custom_attributes']))
+                    {
+                        foreach ($address['address']['custom_attributes'] as $custom_attribute)
+                        {
+                            if($custom_attribute['attribute_code'] == 'altura')
+                            {
+                                $altura = $custom_attribute['value'];
+                            }
+
+                            if($custom_attribute['attribute_code'] == 'piso')
+                            {
+                                $piso = $custom_attribute['value'];
+                            }
+
+                            if($custom_attribute['attribute_code'] == 'departamento')
+                            {
+                                $departamento = $custom_attribute['value'];
+                            }
+                        }
                     }
 
                     $ciudad = $request->getDestCity();
