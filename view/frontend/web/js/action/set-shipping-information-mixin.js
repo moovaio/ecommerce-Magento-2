@@ -21,12 +21,19 @@ define([
             {
                 $.each(shippingAddress.customAttributes , function( key, value )
                 {
-                    if($.isPlainObject(value)){
-                        value = value['value'];
+                    if(Number.isInteger(key))
+                    {
+                        shippingAddress['customAttributes'][value['attribute_code']] = value['value'];
+                        shippingAddress['extension_attributes'][value['attribute_code']] = value['value'];
                     }
+                    else{
+                        if($.isPlainObject(value)){
+                            value = value['value'];
+                        }
 
-                    shippingAddress['customAttributes'][key] = value;
-                    shippingAddress['extension_attributes'][key] = value;
+                        shippingAddress['customAttributes'][key] = value;
+                        shippingAddress['extension_attributes'][key] = value;
+                    }
                 });
             }
 
