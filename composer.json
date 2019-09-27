@@ -1,8 +1,8 @@
 {
-  "name": "moovaio/magento2",
+  "name": "moova/magento2",
   "description": "Módulo de envíos Moova para Magento 2",
   "type": "magento2-module",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "require": {
   },
   "autoload": {

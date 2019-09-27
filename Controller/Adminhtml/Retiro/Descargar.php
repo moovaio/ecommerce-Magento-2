@@ -116,7 +116,7 @@ class Descargar extends \Magento\Backend\App\Action
                 ob_clean();
                 flush();
                 readfile($file);
-                exit;
+                return;
             }
             else
                 $this->messageManager->addErrorMessage(__('Se produjo un error al generar el envío MOOVA. Por favor intentelo nuevamente'));
