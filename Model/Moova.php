@@ -82,8 +82,7 @@ class Moova
         \Magento\Shipping\Model\CarrierFactory $carrierFactory,
         \Magento\Sales\Model\Order\Shipment\TrackFactory $trackFactory,
         Country  $country
-    )
-    {
+    ) {
         $this->_orderRepository = $orderRepository;
         $this->_shipmentFactory = $shipmentFactory;
         $this->_shipmentNotifier = $shipmentNotifier;
@@ -105,22 +104,19 @@ class Moova
     {
         $order = $this->_orderRepository->get($orderId);
 
-        if (!$order->canShip())
-        {
+        if (!$order->canShip()) {
             return false;
         }
 
         $shippingAddress = $order->getShippingAddress();
         $shipment = $this->_shipmentFactory->create($order);
 
-        try
-        {
+        try {
             $valorTotal = $pesoTotal = 0;
             $itemsArray = [];
             $itemsWsMoova = [];
 
-            foreach ($order->getAllItems() AS $orderItem)
-            {
+            foreach ($order->getAllItems() as $orderItem) {
                 if (!$orderItem->getQtyToShip() || $orderItem->getIsVirtual()) {
                     continue;
                 }
@@ -128,13 +124,13 @@ class Moova
                 $_product = $orderItem->getProduct();
 
                 $moovaAlto = (int) $_product->getResource()
-                        ->getAttributeRawValue($_product->getId(),'moova_alto',$_product->getStoreId()) * $orderItem->getQty();
+                    ->getAttributeRawValue($_product->getId(), 'moova_alto', $_product->getStoreId()) * $orderItem->getQty();
 
                 $moovaLargo = (int) $_product->getResource()
-                        ->getAttributeRawValue($_product->getId(),'moova_largo',$_product->getStoreId()) * $orderItem->getQty();
+                    ->getAttributeRawValue($_product->getId(), 'moova_largo', $_product->getStoreId()) * $orderItem->getQty();
 
                 $moovaAncho = (int) $_product->getResource()
-                        ->getAttributeRawValue($_product->getId(),'moova_ancho',$_product->getStoreId()) * $orderItem->getQty();
+                    ->getAttributeRawValue($_product->getId(), 'moova_ancho', $_product->getStoreId()) * $orderItem->getQty();
 
                 $qtyShipped = $orderItem->getQtyToShip();
                 $shipmentItem = $this->_converter->itemToShipmentItem($orderItem)->setQty($qtyShipped);
@@ -143,15 +139,15 @@ class Moova
                 $pesoTotal  += $qtyShipped * $orderItem->getWeight();
 
                 $itemsArray[$orderItem->getId()] =
-                [
-                    'qty'           => $qtyShipped,
-                    'customs_value' => $orderItem->getPrice(),
-                    'price'         => $orderItem->getPrice(),
-                    'name'          => $orderItem->getName(),
-                    'weight'        => $orderItem->getWeight(),
-                    'product_id'    => $orderItem->getProductId(),
-                    'order_item_id' => $orderItem->getId()
-                ];
+                    [
+                        'qty'           => $qtyShipped,
+                        'customs_value' => $orderItem->getPrice(),
+                        'price'         => $orderItem->getPrice(),
+                        'name'          => $orderItem->getName(),
+                        'weight'        => $orderItem->getWeight(),
+                        'product_id'    => $orderItem->getProductId(),
+                        'order_item_id' => $orderItem->getId()
+                    ];
 
                 $itemsWsMoova[] = [
                     'description' => $orderItem->getName(),
@@ -167,16 +163,17 @@ class Moova
             }
 
             $shipment->setPackages(
-            [
-                1=> [
-                    'items' => $itemsArray,
-                    'params'=> [
-                        'weight' => $pesoTotal,
-                        'container'=> 1,
-                        'customs_value'=> $valorTotal
+                [
+                    1 => [
+                        'items' => $itemsArray,
+                        'params' => [
+                            'weight' => $pesoTotal,
+                            'container' => 1,
+                            'customs_value' => $valorTotal
+                        ]
                     ]
                 ]
-            ]);
+            );
 
             $shipment->register();
             $shipment->getOrder()->setIsInProcess(true);
@@ -186,20 +183,20 @@ class Moova
 
             $shippingParams = [
                 'currency'      => $order->getStoreCurrencyCode(),
-                'type'          => 'regular',
+                'type'          => 'magento_2_24_horas_max',
                 'flow'          => 'manual',
                 'from'          =>
                 [
                     'googlePlaceId' => '',
                     'country'       => $countryInfo->getData('iso3_code'),
-                    'street'        => $this->_scopeConfig->getValue('shipping/moova_webservice/from/street',\Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                    'number'        => $this->_scopeConfig->getValue('shipping/moova_webservice/from/number',\Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                    'floor'         => $this->_scopeConfig->getValue('shipping/moova_webservice/from/floor',\Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                    'apartment'     => $this->_scopeConfig->getValue('shipping/moova_webservice/from/apartment',\Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                    'city'          => $this->_scopeConfig->getValue('shipping/moova_webservice/from/city',\Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                    'state'         => $this->_scopeConfig->getValue('shipping/moova_webservice/from/state',\Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                    'postalCode'    => $this->_scopeConfig->getValue('shipping/moova_webservice/from/postcode',\Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                    'instructions'  => $this->_scopeConfig->getValue('shipping/moova_webservice/from/instructions',\Magento\Store\Model\ScopeInterface::SCOPE_STORE),
+                    'street'        => $this->_scopeConfig->getValue('shipping/moova_webservice/from/street', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
+                    'number'        => $this->_scopeConfig->getValue('shipping/moova_webservice/from/number', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
+                    'floor'         => $this->_scopeConfig->getValue('shipping/moova_webservice/from/floor', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
+                    'apartment'     => $this->_scopeConfig->getValue('shipping/moova_webservice/from/apartment', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
+                    'city'          => $this->_scopeConfig->getValue('shipping/moova_webservice/from/city', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
+                    'state'         => $this->_scopeConfig->getValue('shipping/moova_webservice/from/state', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
+                    'postalCode'    => $this->_scopeConfig->getValue('shipping/moova_webservice/from/postcode', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
+                    'instructions'  => $this->_scopeConfig->getValue('shipping/moova_webservice/from/instructions', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
                     'contact'       =>
                     [
                         'firstName' => '',
@@ -207,12 +204,12 @@ class Moova
                         'email'     => '',
                         'phone'     => ''
                     ],
-                    'message'=> ''
+                    'message' => ''
                 ],
-                'to'=>
+                'to' =>
                 [
                     'googlePlaceId' => '',
-                    'street'        => implode(' ',$shippingAddress->getStreet()),
+                    'street'        => implode(' ', $shippingAddress->getStreet()),
                     'number'        => $shippingAddress->getAltura(),
                     'floor'         => $shippingAddress->getPiso(),
                     'apartment'     => $shippingAddress->getDepartamento(),
@@ -221,7 +218,7 @@ class Moova
                     'postalCode'    => $shippingAddress->getPostcode(),
                     'country'       => $countryInfo->getData('iso3_code'),
                     'instructions'  => $shippingAddress->getObservaciones(),
-                    'contact'=> [
+                    'contact' => [
                         'firstName' => $shippingAddress->getFirstname(),
                         'lastName'  => $shippingAddress->getLastname(),
                         'email'     => $shippingAddress->getEmail(),
@@ -242,13 +239,12 @@ class Moova
 
             $shipmentMoova = $this->_webService->newShipment($shippingParams);
 
-            if($shipmentMoova === false)
-            {
+            if ($shipmentMoova === false) {
                 return false;
             }
 
-            $trackingMoova = substr($shipmentMoova['id'],0,8);
-            $mensajeEstado = __('La solicitud de retiro moova fue creada correctamente. Código de seguimiento Moova: %1',$trackingMoova);
+            $trackingMoova = substr($shipmentMoova['id'], 0, 8);
+            $mensajeEstado = __('La solicitud de retiro moova fue creada correctamente. Código de seguimiento Moova: %1', $trackingMoova);
 
             $history = $order->addStatusHistoryComment($mensajeEstado);
             $history->setIsVisibleOnFront(true);
@@ -272,11 +268,10 @@ class Moova
             $this->_shipmentNotifier->notify($shipment);
 
             return $mensajeEstado;
-
-        } catch (\Exception $e)
-        {
+        } catch (\Exception $e) {
             throw new \Magento\Framework\Exception\LocalizedException(
-                __($e->getMessage()));
+                __($e->getMessage())
+            );
         }
     }
 
@@ -287,16 +282,12 @@ class Moova
      * @param $carrierTitle
      * @return \Magento\Sales\Model\Order\Shipment
      */
-    private function addTrackingNumbersToShipment(\Magento\Sales\Model\Order\Shipment $shipment,$trackingNumbers,$carrierCode,$carrierTitle)
+    private function addTrackingNumbersToShipment(\Magento\Sales\Model\Order\Shipment $shipment, $trackingNumbers, $carrierCode, $carrierTitle)
     {
-        foreach ($trackingNumbers as $number)
-        {
-            if (is_array($number))
-            {
+        foreach ($trackingNumbers as $number) {
+            if (is_array($number)) {
                 $this->addTrackingNumbersToShipment($shipment, $number, $carrierCode, $carrierTitle);
-            }
-            else
-            {
+            } else {
                 $shipment->addTrack(
                     $this->_trackFactory->create()
                         ->setNumber($number)
