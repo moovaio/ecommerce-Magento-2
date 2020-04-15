@@ -22,6 +22,8 @@ var config = {
                 'Improntus_Moova/js/view/shipping-address/address-renderer/default',
             'Magento_Checkout/js/view/billing-address':
                 'Improntus_Moova/js/view/billing-address',
+            'Magento_Checkout/js/view/billing-address/list':
+                'Magento_Checkout/js/view/billing-address/list',
             'Magento_Checkout/js/view/shipping-information/address-renderer/default':
                 'Improntus_Moova/js/view/shipping-information/address-renderer/default',
             'Magento_Checkout/template/billing-address':
