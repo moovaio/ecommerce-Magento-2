@@ -208,7 +208,6 @@ class Moova
                 ],
                 'to' =>
                 [
-                    'googlePlaceId' => '',
                     'street'        => implode(' ', $shippingAddress->getStreet()),
                     'number'        => $shippingAddress->getAltura(),
                     'floor'         => $shippingAddress->getPiso(),

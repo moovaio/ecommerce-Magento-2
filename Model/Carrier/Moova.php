@@ -15,6 +15,7 @@ use Magento\Quote\Model\Quote\Address\RateResult\MethodFactory;
 use Improntus\Moova\Helper\Data as MoovaHelper;
 use Improntus\Moova\Model\Webservice;
 use Magento\Framework\Xml\Security;
+use Improntus\Moova\Helper\Log;
 
 /**
  * Class Moova
@@ -297,28 +298,27 @@ class Moova extends AbstractCarrierOnline implements CarrierInterface
 
         $countryId = $shippingAddress['country_id'] ? $shippingAddress['country_id'] : $request->getDestCountryId();
         $countryInfo = $this->_country->loadByCode($countryId);
-        $costoEnvio = $webservice->getBudget(
-            [
-                'from' => [
-                    'street' => $this->_scopeConfig->getValue('shipping/moova_webservice/from/street', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                    'number' => $this->_scopeConfig->getValue('shipping/moova_webservice/from/number', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                    'floor'  => $this->_scopeConfig->getValue('shipping/moova_webservice/from/floor', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                    'apartment' => $this->_scopeConfig->getValue('shipping/moova_webservice/from/apartment', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                    'city'      => $this->_scopeConfig->getValue('shipping/moova_webservice/from/city', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                    'state'      => $this->_scopeConfig->getValue('shipping/moova_webservice/from/state', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                    'postalCode' => $this->_scopeConfig->getValue('shipping/moova_webservice/from/postcode', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                    'country' => $countryInfo->getData('iso3_code')
-                ],
-                'to' => $this->getDestination($shippingAddress, $countryInfo),
-                'conf' => [
-                    'assurance' => false,
-                    'items'     => $itemsWsMoova
-                ],
-                'shipping_type_id' => 1
-            ],
-            1
-        );
 
+        $shipping = [
+            'from' => [
+                'street' => $this->_scopeConfig->getValue('shipping/moova_webservice/from/street', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
+                'number' => $this->_scopeConfig->getValue('shipping/moova_webservice/from/number', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
+                'floor'  => $this->_scopeConfig->getValue('shipping/moova_webservice/from/floor', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
+                'apartment' => $this->_scopeConfig->getValue('shipping/moova_webservice/from/apartment', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
+                'city'      => $this->_scopeConfig->getValue('shipping/moova_webservice/from/city', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
+                'state'      => $this->_scopeConfig->getValue('shipping/moova_webservice/from/state', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
+                'postalCode' => $this->_scopeConfig->getValue('shipping/moova_webservice/from/postcode', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
+                'country' => $countryInfo->getData('iso3_code')
+            ],
+            'to' => $this->getDestination($shippingAddress->getData(), $countryInfo),
+            'conf' => [
+                'assurance' => false,
+                'items'     => $itemsWsMoova
+            ]
+        ];
+        Log::info('collectRates - sending to Moova: ' . json_encode($shipping));
+        $costoEnvio = $webservice->getBudget($shipping, 1);
+        Log::info('collectRates - received from Moova' . json_encode($costoEnvio));
         if ($costoEnvio !== false) {
             $method->setPrice($costoEnvio);
             $method->setCost($costoEnvio);
@@ -346,21 +346,35 @@ class Moova extends AbstractCarrierOnline implements CarrierInterface
             'city',
             'state',
             'postalCode',
+            'floor'
         ];
         $response = [];
 
         foreach ($checkoutFields as $field) {
             $key = $this->_scopeConfig->getValue("shipping/moova_webservice/moova_checkout/$field", \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-            $response[$field] = isset($shippingAddress[$key]) ? $shippingAddress[$key] : null;
+            $value = isset($shippingAddress[$key]) ? $shippingAddress[$key] : '';
+            $value = explode("\n", $value);
+            $response[$field] = array_shift($value);
+            $response['apartment'] = implode('', $value);
         }
+
         if (!empty($response['address'])) {
             $countryName = $countryInfo->getName();
-            $response['address'] = "{$response['city']}, {$response['state']},$countryName";
+            $toAppend = ['city', 'state'];
+            foreach ($toAppend as $item) {
+                $value = $response[$item];
+                if (!empty($value)) {
+                    $response['address'] .= ",$value";
+                }
+            }
+            $response['address'] .= ",$countryName";
             unset($response['city']);
             unset($response['state']);
         }
-        $response['country'] = $countryInfo->getData('iso3_code');
 
+        $response['country'] = $countryInfo->getData('iso3_code');
+        Log::info('getDestination - parameters received:' . json_encode($shippingAddress));
+        Log::info('getDestination - destination fields:' . json_encode($response));
         return $response;
     }
 

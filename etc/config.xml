@@ -24,7 +24,7 @@
                     <number></number>
                     <floor>shipping_description</floor>
                     <city>city</city>
-                    <state>state</state>
+                    <state>region</state>
                     <postalCode>postcode</postalCode>
                 </moova_checkout>
             </moova_webservice>
