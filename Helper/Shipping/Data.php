@@ -6,6 +6,7 @@ use Magento\Framework\App\ObjectManager;
 use Magento\Framework\UrlInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Temando\Shipping\Model\Shipment;
+use Improntus\Moova\Helper\Log;
 
 /**
  * Class Data
@@ -28,8 +29,7 @@ class Data extends \Magento\Shipping\Helper\Data
         \Magento\Framework\App\Helper\Context $context,
         StoreManagerInterface $storeManager,
         UrlInterface $url = null
-    )
-    {
+    ) {
         $this->url = $url ?: ObjectManager::getInstance()->get(UrlInterface::class);
 
         parent::__construct($context, $storeManager, $url);
@@ -48,15 +48,13 @@ class Data extends \Magento\Shipping\Helper\Data
         $urlPart = "{$key}:{$model->{$method}()}:{$model->getProtectCode()}";
         $url = 'shipping/tracking/popup';
 
-        if($model->getShippingMethod() == 'moova_moova')
-        {
+        if ($model->getShippingMethod() == 'moova_moova') {
             $shipmentCollection = $model->getShipmentsCollection()->getData();
 
-            if(count($shipmentCollection) == 1)
-            {
+            if (count($shipmentCollection) == 1) {
                 $shipmentInfo = json_decode($model->getShipmentsCollection()->getData()[0]['customer_note']);
 
-                $trackingNumber = substr($shipmentInfo->id,0,8);
+                $trackingNumber = substr($shipmentInfo->id, 0, 8);
 
                 $url = $this->scopeConfig->getValue('shipping/moova_webservice/tracking/url') . "$trackingNumber";
 
@@ -64,19 +62,17 @@ class Data extends \Magento\Shipping\Helper\Data
             }
         }
 
-        if($model->getEntityType() == 'shipment' && $model->getOrder()->getShippingMethod() == 'moova_moova')
-        {
+        if ($model->getEntityType() == 'shipment' && $model->getOrder()->getShippingMethod() == 'moova_moova') {
             $shipmentInfo = json_decode($model->getCustomerNote());
 
-            $trackingNumber = substr($shipmentInfo->id,0,8);
+            $trackingNumber = substr($shipmentInfo->id, 0, 8);
 
             $url = $this->scopeConfig->getValue('shipping/moova_webservice/tracking/url') . "$trackingNumber";
 
             return $url;
         }
 
-        if($model->getTrackNumber() && $model->getCarrierCode()  == 'moova')
-        {
+        if ($model->getTrackNumber() && $model->getCarrierCode()  == 'moova') {
             return $this->scopeConfig->getValue('shipping/moova_webservice/tracking/url') . "{$model->getTrackNumber()}";
         }
 

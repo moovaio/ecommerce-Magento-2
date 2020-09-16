@@ -16,6 +16,7 @@ use Improntus\Moova\Helper\Data as MoovaHelper;
 use Improntus\Moova\Model\Webservice;
 use Magento\Framework\Xml\Security;
 use Improntus\Moova\Helper\Log;
+use Improntus\Moova\Helper\Data;
 
 /**
  * Class Moova
@@ -310,7 +311,7 @@ class Moova extends AbstractCarrierOnline implements CarrierInterface
                 'postalCode' => $this->_scopeConfig->getValue('shipping/moova_webservice/from/postcode', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
                 'country' => $countryInfo->getData('iso3_code')
             ],
-            'to' => $this->getDestination($shippingAddress->getData(), $countryInfo),
+            'to' => Data::getDestination($shippingAddress->getData(), $countryInfo, $this->_scopeConfig),
             'conf' => [
                 'assurance' => false,
                 'items'     => $itemsWsMoova
