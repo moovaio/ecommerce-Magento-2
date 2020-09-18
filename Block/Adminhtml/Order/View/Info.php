@@ -69,6 +69,7 @@ class Info extends \Magento\Sales\Block\Adminhtml\Order\AbstractOrder
 
         $shipmentId = $this->_helperMoova->getStatusFromUrlTracking($order);
 
+        $trackingInfo = null;
         if(isset($shipmentId))
         {
             $trackingInfo = $this->_moovaWs->trackShipment($shipmentId);
