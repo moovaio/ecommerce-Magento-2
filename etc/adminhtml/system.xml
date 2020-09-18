@@ -90,6 +90,37 @@
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     </field>
                 </group>
+                <group id='moova_checkout' translate="label" type="text" sortOrder="500" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Custom checkout mapping to moova</label>
+                    <field id="address" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Address</label>        
+                        <source_model>Improntus\Moova\Model\Source\CheckoutOptions</source_model>
+                    </field>
+                    <field id="street" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>street</label>        
+                        <source_model>Improntus\Moova\Model\Source\CheckoutOptions</source_model>
+                    </field>
+                    <field id="number" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>number</label>        
+                        <source_model>Improntus\Moova\Model\Source\CheckoutOptions</source_model>
+                    </field>
+                    <field id="floor" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>floor</label>        
+                        <source_model>Improntus\Moova\Model\Source\CheckoutOptions</source_model>
+                    </field>
+                    <field id="city" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>city</label>        
+                        <source_model>Improntus\Moova\Model\Source\CheckoutOptions</source_model>
+                    </field>
+                    <field id="state" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>state</label>        
+                        <source_model>Improntus\Moova\Model\Source\CheckoutOptions</source_model>
+                    </field>
+                    <field id="postalCode" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>postalCode</label>        
+                        <source_model>Improntus\Moova\Model\Source\CheckoutOptions</source_model>
+                    </field>
+                </group>
             </group>
         </section>
     </system>

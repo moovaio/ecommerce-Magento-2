@@ -15,6 +15,8 @@ use Magento\Quote\Model\Quote\Address\RateResult\MethodFactory;
 use Improntus\Moova\Helper\Data as MoovaHelper;
 use Improntus\Moova\Model\Webservice;
 use Magento\Framework\Xml\Security;
+use Improntus\Moova\Helper\Log;
+use Improntus\Moova\Helper\Data;
 
 /**
  * Class Moova
@@ -115,7 +117,8 @@ class Moova extends AbstractCarrierOnline implements CarrierInterface
     public function __construct(
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
         \Magento\Quote\Model\Quote\Address\RateResult\ErrorFactory $rateErrorFactory,
-        \Psr\Log\LoggerInterface $logger, Security $xmlSecurity,
+        \Psr\Log\LoggerInterface $logger,
+        Security $xmlSecurity,
         \Magento\Shipping\Model\Simplexml\ElementFactory $xmlElFactory,
         \Magento\Shipping\Model\Rate\ResultFactory $rateFactory,
         \Magento\Quote\Model\Quote\Address\RateResult\MethodFactory $rateMethodFactory,
@@ -133,8 +136,7 @@ class Moova extends AbstractCarrierOnline implements CarrierInterface
         Country  $country,
         MoovaHelper $moovaHelper,
         array $data = []
-    )
-    {
+    ) {
         $this->_rateResultFactory = $rateFactory;
         $this->_rateMethodFactory = $rateMethodFactory;
         $this->_helper            = $moovaHelper;
@@ -215,13 +217,11 @@ class Moova extends AbstractCarrierOnline implements CarrierInterface
      */
     public function collectRates(RateRequest $request)
     {
-        if (!$this->getConfigFlag('active'))
-        {
+        if (!$this->getConfigFlag('active')) {
             return false;
         }
 
         $helper = $this->_helper;
-
         $result = $this->_rateResultFactory->create();
         $method = $this->_rateMethodFactory->create();
 
@@ -235,31 +235,31 @@ class Moova extends AbstractCarrierOnline implements CarrierInterface
         $itemsWsMoova = [];
         $totalPrice = 0;
 
-        foreach($request->getAllItems() as $_item)
-        {
-            if($_item->getProductType() == 'configurable')
+        foreach ($request->getAllItems() as $_item) {
+            if ($_item->getProductType() == 'configurable')
                 continue;
 
             $_product = $_item->getProduct();
 
-            if($_item->getParentItem())
+            if ($_item->getParentItem())
                 $_item = $_item->getParentItem();
 
             $moovaAlto = (int) $_product->getResource()
-                    ->getAttributeRawValue($_product->getId(),'moova_alto',$_product->getStoreId()) * $_item->getQty();
+                ->getAttributeRawValue($_product->getId(), 'moova_alto', $_product->getStoreId());
 
             $moovaLargo = (int) $_product->getResource()
-                    ->getAttributeRawValue($_product->getId(),'moova_largo',$_product->getStoreId()) * $_item->getQty();
+                ->getAttributeRawValue($_product->getId(), 'moova_largo', $_product->getStoreId());
 
             $moovaAncho = (int) $_product->getResource()
-                    ->getAttributeRawValue($_product->getId(),'moova_ancho',$_product->getStoreId()) * $_item->getQty();
+                ->getAttributeRawValue($_product->getId(), 'moova_ancho', $_product->getStoreId());
 
             $totalPrice += $_product->getFinalPrice();
 
             $itemsWsMoova[] = [
+                'quantity' => $_item->getQty(),
                 'description' => $_item->getName(),
                 'price'     => $_item->getPrice(),
-                'weight'    => ($_product->getWeight() * 1000) * $_item->getQty(), //Peso en unidad de kg a gramos
+                'weight'    => $_product->getWeight() * 1000, //Peso en unidad de kg a gramos
                 'length'    => $moovaAlto,
                 'width'     => $moovaLargo,
                 'height'    => $moovaAncho
@@ -268,8 +268,7 @@ class Moova extends AbstractCarrierOnline implements CarrierInterface
 
         $pesoTotal  = $request->getPackageWeight(); //Peso en unidad de kg
 
-        if($pesoTotal > (int)$helper->getMaxWeight())
-        {
+        if ($pesoTotal > (int)$helper->getMaxWeight()) {
             $error = $this->_rateErrorFactory->create();
             $error->setCarrier($this->_code);
             $error->setCarrierTitle($this->getConfigData('title'));
@@ -278,200 +277,106 @@ class Moova extends AbstractCarrierOnline implements CarrierInterface
             return $error;
         }
 
-        if($request->getFreeShipping() === true)
-        {
+        if ($request->getFreeShipping() === true) {
             $method->setPrice(0);
             $method->setCost(0);
 
             $result->append($method);
+            return $result;
         }
-        else
-        {
-            if($this->_request->getControllerName() == 'order_create')
-            {
-                if(is_array($this->_request->getParam('order')) && isset($this->_request->getParam('order')['shipping_address']))
-                {
-                    $shippingAddress = $this->_request->getParam('order')['shipping_address'];
 
-                    $countryId = $shippingAddress['country_id'] ? $shippingAddress['country_id'] : $request->getDestCountryId();
-                    $countryInfo = $this->_country->loadByCode($countryId);
+        $isOrderCreate  = $this->_request->getControllerName() == 'order_create'
+            && is_array($this->_request->getParam('order'))
+            && isset($this->_request->getParam('order')['shipping_address']);
 
-                    $costoEnvio = $webservice->getBudget(
-                        [
-                            'from' => [
-                                'street' => $this->_scopeConfig->getValue('shipping/moova_webservice/from/street',\Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                                'number' => $this->_scopeConfig->getValue('shipping/moova_webservice/from/number',\Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                                'floor'  => $this->_scopeConfig->getValue('shipping/moova_webservice/from/floor',\Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                                'apartment' => $this->_scopeConfig->getValue('shipping/moova_webservice/from/apartment',\Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                                'city'      => $this->_scopeConfig->getValue('shipping/moova_webservice/from/city',\Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                                'state'      => $this->_scopeConfig->getValue('shipping/moova_webservice/from/state',\Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                                'postalCode' => $this->_scopeConfig->getValue('shipping/moova_webservice/from/postcode',\Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                                'country' => $countryInfo->getData('iso3_code')
-                            ],
-                            'to' => [
-                                'street'   => $request->getDestStreet() .' '. $request->getDestStreet1(),
-                                'number'   => $shippingAddress['altura'],
-                                'floor'    => $shippingAddress['piso'],
-                                'apartment'  => $shippingAddress['departamento'],
-                                'city'       => $shippingAddress['region'],
-                                'state'      => $request->getRegionId(),
-                                'postalCode' => $request->getDestPostcode(),
-                                'country'    => $countryInfo->getData('iso3_code'),
-                            ],
-                            'conf'=>[
-                                'assurance' => false,
-                                'items'     => $itemsWsMoova
-                            ],
-                            'shipping_type_id' => 1
-                        ],1);
-
-                    if($costoEnvio !== false)
-                    {
-                        $method->setPrice($costoEnvio);
-                        $method->setCost($costoEnvio);
-
-                        $result->append($method);
-                    }
-                    else
-                    {
-                        $error = $this->_rateErrorFactory->create();
-                        $error->setCarrier($this->_code);
-                        $error->setCarrierTitle($this->getConfigData('title'));
-                        $error->setErrorMessage(__('No existen cotizaciones para la dirección ingresada'));
-
-                        $result->append($error);
-                    }
-                }
-            }
-            else{
-
-                $shippingAddress = $helper->getQuote()->getShippingAddress();
-
-                $altura = $shippingAddress->getAltura();
-                $piso = $shippingAddress->getPiso();
-                $departamento = $shippingAddress->getDepartamento();
-                $ciudad = $shippingAddress->getCity();
-
-                $address = json_decode(file_get_contents('php://input'), true);
-
-                if(isset($address['address']) && isset($address['address']['custom_attributes']))
-                {
-                    $altura =  isset($address['address']['custom_attributes']['altura']) ? $address['address']['custom_attributes']['altura'] : null;
-                    $piso =  isset($address['address']['custom_attributes']['piso']) ? $address['address']['custom_attributes']['piso'] : null;
-                    $departamento =  isset($address['address']['custom_attributes']['departamento']) ? $address['address']['custom_attributes']['departamento'] : null;
-
-                    if(is_array($altura))
-                    {
-                        $altura = $altura['value'];
-                    }
-
-                    if(is_array($piso))
-                    {
-                        $piso = $piso['value'];
-                    }
-
-                    if(is_array($departamento))
-                    {
-                        $departamento = $departamento['value'];
-                    }
-
-                    if($altura == null && $piso == null && $departamento == null && is_array($address['address']['custom_attributes']))
-                    {
-                        foreach ($address['address']['custom_attributes'] as $custom_attribute)
-                        {
-                            if($custom_attribute['attribute_code'] == 'altura')
-                            {
-                                $altura = $custom_attribute['value'];
-                            }
-
-                            if($custom_attribute['attribute_code'] == 'piso')
-                            {
-                                $piso = $custom_attribute['value'];
-                            }
-
-                            if($custom_attribute['attribute_code'] == 'departamento')
-                            {
-                                $departamento = $custom_attribute['value'];
-                            }
-                        }
-                    }
-
-                    $ciudad = $request->getDestCity();
-                }
-                else if(isset($address['addressId']))
-                {
-                    $address = $this->_addressRepository->getById($address['addressId']);
-
-                    $altura = $address->getCustomAttribute('altura')->getValue();
-                    $piso = $address->getCustomAttribute('piso')->getValue();
-                    $departamento = $address->getCustomAttribute('departamento')->getValue();
-                    $ciudad = $address->getCity();
-                }
-
-                if(!is_null($request->getDestRegionId()))
-                {
-                    $provincia = $helper->getProvincia((int)$request->getDestRegionId());
-                }
-                else
-                {
-                    if(is_array($region = $shippingAddress->getRegion()))
-                        $provincia = $region['region'];
-                    else
-                        $provincia = $region;
-                }
-
-                $countryId = $shippingAddress->getCountryId() ? $shippingAddress->getCountryId() : $request->getDestCountryId();
-                $countryInfo = $this->_country->loadByCode($countryId);
-
-                $costoEnvio = $webservice->getBudget(
-                    [
-                        'from' => [
-                            'street' => $this->_scopeConfig->getValue('shipping/moova_webservice/from/street',\Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                            'number' => $this->_scopeConfig->getValue('shipping/moova_webservice/from/number',\Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                            'floor'  => $this->_scopeConfig->getValue('shipping/moova_webservice/from/floor',\Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                            'apartment' => $this->_scopeConfig->getValue('shipping/moova_webservice/from/apartment',\Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                            'city'      => $this->_scopeConfig->getValue('shipping/moova_webservice/from/city',\Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                            'state'      => $this->_scopeConfig->getValue('shipping/moova_webservice/from/state',\Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                            'postalCode' => $this->_scopeConfig->getValue('shipping/moova_webservice/from/postcode',\Magento\Store\Model\ScopeInterface::SCOPE_STORE),
-                            'country' => $countryInfo->getData('iso3_code')
-                        ],
-                        'to' => [
-                            'street'   => $request->getDestStreet() .' '. $request->getDestStreet1(),
-                            'number'   => $altura,
-                            'floor'    => $piso,
-                            'apartment'  => $departamento,
-                            'city'       => $ciudad,
-                            'state'      => $provincia,
-                            'postalCode' => $request->getDestPostcode(),
-                            'country'    => $countryInfo->getData('iso3_code'),
-                        ],
-                        'conf'=>[
-                            'assurance' => false,
-                            'items'     => $itemsWsMoova
-                        ],
-                        'shipping_type_id' => 1
-                    ],1);
-
-                if($costoEnvio !== false)
-                {
-                    $method->setPrice($costoEnvio);
-                    $method->setCost($costoEnvio);
-
-                    $result->append($method);
-                }
-                else
-                {
-                    $error = $this->_rateErrorFactory->create();
-                    $error->setCarrier($this->_code);
-                    $error->setCarrierTitle($this->getConfigData('title'));
-                    $error->setErrorMessage(__('No existen cotizaciones para la dirección ingresada'));
-
-                    $result->append($error);
-                }
-            }
+        if ($this->_request->getControllerName() !== 'order_create') {
+            $shippingAddress = $helper->getQuote()->getShippingAddress();
+        } elseif ($isOrderCreate) {
+            $shippingAddress = $this->_request->getParam('order')['shipping_address'];
+        } else {
+            return $result;
         }
+
+        $countryId = $shippingAddress['country_id'] ? $shippingAddress['country_id'] : $request->getDestCountryId();
+        $countryInfo = $this->_country->loadByCode($countryId);
+
+        $shipping = [
+            'from' => [
+                'street' => $this->_scopeConfig->getValue('shipping/moova_webservice/from/street', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
+                'number' => $this->_scopeConfig->getValue('shipping/moova_webservice/from/number', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
+                'floor'  => $this->_scopeConfig->getValue('shipping/moova_webservice/from/floor', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
+                'apartment' => $this->_scopeConfig->getValue('shipping/moova_webservice/from/apartment', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
+                'city'      => $this->_scopeConfig->getValue('shipping/moova_webservice/from/city', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
+                'state'      => $this->_scopeConfig->getValue('shipping/moova_webservice/from/state', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
+                'postalCode' => $this->_scopeConfig->getValue('shipping/moova_webservice/from/postcode', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
+                'country' => $countryInfo->getData('iso3_code')
+            ],
+            'to' => Data::getDestination($shippingAddress->getData(), $countryInfo, $this->_scopeConfig),
+            'conf' => [
+                'assurance' => false,
+                'items'     => $itemsWsMoova
+            ]
+        ];
+        Log::info('collectRates - sending to Moova: ' . json_encode($shipping));
+        $costoEnvio = $webservice->getBudget($shipping, 1);
+        Log::info('collectRates - received from Moova' . json_encode($costoEnvio));
+        if ($costoEnvio !== false) {
+            $method->setPrice($costoEnvio);
+            $method->setCost($costoEnvio);
+
+            $result->append($method);
+            return $result;
+        }
+        $error = $this->_rateErrorFactory->create();
+        $error->setCarrier($this->_code);
+        $error->setCarrierTitle($this->getConfigData('title'));
+        $error->setErrorMessage(__('No existen cotizaciones para la dirección ingresada'));
+
+        $result->append($error);
 
         return $result;
+    }
+
+    private function getDestination($shippingAddress, $countryInfo)
+    {
+        $checkoutFields = [
+            'address',
+            'street',
+            'number',
+            'floor',
+            'city',
+            'state',
+            'postalCode',
+            'floor'
+        ];
+        $response = [];
+
+        foreach ($checkoutFields as $field) {
+            $key = $this->_scopeConfig->getValue("shipping/moova_webservice/moova_checkout/$field", \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+            $value = isset($shippingAddress[$key]) ? $shippingAddress[$key] : '';
+            $value = explode("\n", $value);
+            $response[$field] = array_shift($value);
+            $response['apartment'] = implode('', $value);
+        }
+
+        if (!empty($response['address'])) {
+            $countryName = $countryInfo->getName();
+            $toAppend = ['city', 'state'];
+            foreach ($toAppend as $item) {
+                $value = $response[$item];
+                if (!empty($value)) {
+                    $response['address'] .= ",$value";
+                }
+            }
+            $response['address'] .= ",$countryName";
+            unset($response['city']);
+            unset($response['state']);
+        }
+
+        $response['country'] = $countryInfo->getData('iso3_code');
+        Log::info('getDestination - parameters received:' . json_encode($shippingAddress));
+        Log::info('getDestination - destination fields:' . json_encode($response));
+        return $response;
     }
 
     /**
@@ -487,8 +392,7 @@ class Moova extends AbstractCarrierOnline implements CarrierInterface
         $xmlRequest = $this->_formShipmentRequest($request);
         $xmlResponse = $this->_getCachedQuotes($xmlRequest);
 
-        if ($xmlResponse === null)
-        {
+        if ($xmlResponse === null) {
             $url = $this->getShipConfirmUrl();
 
             $debugData = ['request' => $xmlRequest];
@@ -501,8 +405,7 @@ class Moova extends AbstractCarrierOnline implements CarrierInterface
             curl_setopt($ch, CURLOPT_TIMEOUT, 30);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, (bool)$this->getConfigFlag('mode_xml'));
             $xmlResponse = curl_exec($ch);
-            if ($xmlResponse === false)
-            {
+            if ($xmlResponse === false) {
                 throw new \Exception(curl_error($ch));
             } else {
                 $debugData['result'] = $xmlResponse;
