@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
-    <event name="sales_model_service_quote_submit_before">
-        <observer instance="Improntus\Moova\Observer\Sales\ModelServiceQuoteSubmitBefore" name="Improntus_Moova::ModelServiceQuoteSubmitBefore"/>
-    </event>
     <event name="sales_order_place_before">
         <observer name="Improntus_Moova::SalesOrderPlaceBefore" instance="Improntus\Moova\Observer\SalesOrderPlaceBefore"/>
     </event>

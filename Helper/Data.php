@@ -7,6 +7,7 @@ use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Directory\Model\Region;
 use Magento\Shipping\Helper\Data as ShippingData;
+use Improntus\Moova\Helper\Log;
 
 /**
  * Class Data
@@ -96,7 +97,7 @@ class Data extends AbstractHelper
      */
     public function getAppId()
     {
-        return $this->_scopeConfig->getValue('shipping/moova_webservice/app_id',\Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+        return $this->_scopeConfig->getValue('shipping/moova_webservice/app_id', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     /**
@@ -104,7 +105,7 @@ class Data extends AbstractHelper
      */
     public function getSecretKey()
     {
-        return $this->_scopeConfig->getValue('shipping/moova_webservice/secret_key',\Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+        return $this->_scopeConfig->getValue('shipping/moova_webservice/secret_key', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     /**
@@ -112,7 +113,7 @@ class Data extends AbstractHelper
      */
     public function getApiUrl()
     {
-        return $this->_scopeConfig->getValue('shipping/moova_webservice/url',\Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+        return $this->_scopeConfig->getValue('shipping/moova_webservice/url', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     /**
@@ -121,9 +122,9 @@ class Data extends AbstractHelper
      * @return string
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
-    public function getStoreUrl($path,$params)
+    public function getStoreUrl($path, $params)
     {
-        return $this->_storeManagerInterface->getStore()->getUrl($path,$params);
+        return $this->_storeManagerInterface->getStore()->getUrl($path, $params);
     }
 
     /**
@@ -131,7 +132,7 @@ class Data extends AbstractHelper
      */
     public function getMaxWeight()
     {
-        return (float)$this->_scopeConfig->getValue("carriers/moova/max_package_weight",\Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+        return (float)$this->_scopeConfig->getValue("carriers/moova/max_package_weight", \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     /**
@@ -140,8 +141,7 @@ class Data extends AbstractHelper
      */
     public function getProvincia($regionId)
     {
-        if(is_int($regionId))
-        {
+        if (is_int($regionId)) {
             $provincia = $this->_region->load($regionId);
 
             $regionId = $provincia->getDefaultName() ? $provincia->getDefaultName() : $regionId;
@@ -154,9 +154,9 @@ class Data extends AbstractHelper
      * @param $mensaje String
      * @param $archivo String
      */
-    public static function log($mensaje,$archivo)
+    public static function log($mensaje, $archivo)
     {
-        $writer = new \Zend\Log\Writer\Stream(BP . '/var/log/'.$archivo);
+        $writer = new \Zend\Log\Writer\Stream(BP . '/var/log/' . $archivo);
         $logger = new \Zend\Log\Logger();
         $logger->addWriter($writer);
         $logger->info($mensaje);
@@ -171,47 +171,6 @@ class Data extends AbstractHelper
     }
 
     /**
-     * @param string $fieldset
-     * @param string $root
-     * @return array
-     */
-    public function getExtraCheckoutAddressFields($fieldset = 'extra_checkout_billing_address_fields',$root='global')
-    {
-        $fields = $this->fieldsetConfig->getFieldset($fieldset, $root);
-        $extraCheckoutFields = [];
-
-        foreach($fields as $field=>$fieldInfo)
-        {
-            $extraCheckoutFields[] = $field;
-        }
-        return $extraCheckoutFields;
-    }
-
-    /**
-     * @param $fromObject
-     * @param $toObject
-     * @param string $fieldset
-     * @return mixed
-     */
-    public function transportFieldsFromExtensionAttributesToObject($fromObject,$toObject,$fieldset='extra_checkout_billing_address_fields')
-    {
-        foreach($this->getExtraCheckoutAddressFields($fieldset) as $extraField)
-        {
-            $set = 'set' . str_replace(' ', '', ucwords(str_replace('_', ' ', $extraField)));
-            $get = 'get' . str_replace(' ', '', ucwords(str_replace('_', ' ', $extraField)));
-
-            $value = $fromObject->$get();
-
-            try {
-                $toObject->$set($value);
-            } catch (\Exception $e) {
-                $this->logger->critical($e->getMessage());
-            }
-        }
-        return $toObject;
-    }
-
-    /**
      * @param int $moovaQuoteId
      */
     public function setMoovaQuoteId($moovaQuoteId)
@@ -219,7 +178,8 @@ class Data extends AbstractHelper
         $this->_checkoutSession->setMoovaQuoteId($moovaQuoteId);
     }
 
-    public function getStatusFromUrlTracking($order){
+    public function getStatusFromUrlTracking($order)
+    {
         $url = $this->_shippingData->getTrackingPopupUrlBySalesModel($order);
 
         $query = parse_url($url, PHP_URL_QUERY);
@@ -227,7 +187,7 @@ class Data extends AbstractHelper
         $shipmentId = null;
         parse_str($query, $queries);
 
-        if(isset($queries['id'])){
+        if (isset($queries['id'])) {
             $shipmentId = $queries['id'];
         }
 
@@ -239,7 +199,47 @@ class Data extends AbstractHelper
      */
     public function getHabilitadoMostrarEstadoEnvio()
     {
-        return $this->_scopeConfig->getValue('shipping/moova_webservice/tracking/enable_status',\Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+        return $this->_scopeConfig->getValue('shipping/moova_webservice/tracking/enable_status', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+    }
+
+    public static function getDestination($shippingAddress, $countryInfo, $_scopeConfig)
+    {
+        $checkoutFields = [
+            'address',
+            'street',
+            'number',
+            'floor',
+            'city',
+            'state',
+            'postalCode',
+            'floor'
+        ];
+
+        foreach ($checkoutFields as $field) {
+            $key = $_scopeConfig->getValue("shipping/moova_webservice/moova_checkout/$field", \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+            $value = isset($shippingAddress[$key]) ? $shippingAddress[$key] : '';
+            $value = explode("\n", $value);
+            $response[$field] = array_shift($value);
+            $response['apartment'] = implode('', $value);
+        }
+
+        if (!empty($response['address'])) {
+            $countryName = $countryInfo->getName();
+            $toAppend = ['city', 'state'];
+            foreach ($toAppend as $item) {
+                $value = $response[$item];
+                if (!empty($value)) {
+                    $response['address'] .= ",$value";
+                }
+            }
+            $response['address'] .= ",$countryName";
+            unset($response['city']);
+            unset($response['state']);
+        }
+
+        $response['country'] = $countryInfo->getData('iso3_code');
+        Log::info('getDestination - parameters received:' . json_encode($shippingAddress));
+        Log::info('getDestination - destination fields:' . json_encode($response));
+        return $response;
     }
 }
-

@@ -5,6 +5,7 @@ namespace Improntus\Moova\Model;
 use Improntus\Moova\Helper\Data as HelperMoova;
 use Magento\Sales\Model\Convert\Order as ConvertOrder;
 use \Magento\Directory\Model\Country;
+use Improntus\Moova\Helper\Data;
 
 /**
  * Class Moova
@@ -206,26 +207,7 @@ class Moova
                     ],
                     'message' => ''
                 ],
-                'to' =>
-                [
-                    'googlePlaceId' => '',
-                    'street'        => implode(' ', $shippingAddress->getStreet()),
-                    'number'        => $shippingAddress->getAltura(),
-                    'floor'         => $shippingAddress->getPiso(),
-                    'apartment'     => $shippingAddress->getDepartamento(),
-                    'city'          => $shippingAddress->getCity(),
-                    'state'         => $shippingAddress->getRegion(),
-                    'postalCode'    => $shippingAddress->getPostcode(),
-                    'country'       => $countryInfo->getData('iso3_code'),
-                    'instructions'  => $shippingAddress->getObservaciones(),
-                    'contact' => [
-                        'firstName' => $shippingAddress->getFirstname(),
-                        'lastName'  => $shippingAddress->getLastname(),
-                        'email'     => $shippingAddress->getEmail(),
-                        'phone'     => $shippingAddress->getTelephone()
-                    ],
-                    'message'       => ''
-                ],
+                'to' => $this->getDestination($shippingAddress, $countryInfo),
                 'internalCode'  => $order->getIncrementId(),
                 'comments'      => '',
                 'extra'         => [],
@@ -273,6 +255,22 @@ class Moova
                 __($e->getMessage())
             );
         }
+    }
+
+    private function getDestination($shippingAddress, $countryInfo)
+    {
+        return array_merge(
+            [
+                'contact' => [
+                    'firstName' => $shippingAddress->getFirstname(),
+                    'lastName'  => $shippingAddress->getLastname(),
+                    'email'     => $shippingAddress->getEmail(),
+                    'phone'     => $shippingAddress->getTelephone()
+                ],
+                'message'       => ''
+            ],
+            Data::getDestination($shippingAddress->getData(), $countryInfo, $this->_scopeConfig)
+        );
     }
 
     /**
