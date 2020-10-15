@@ -1,14 +1,5 @@
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
-    <type name="Magento\Quote\Model\BillingAddressManagement">
-        <plugin name="Improntus_Moova::BillingAddressManagement" sortOrder="10" type="Improntus\Moova\Plugin\Magento\Quote\Model\BillingAddressManagement"/>
-    </type>
-    <type name="Magento\Checkout\Model\PaymentInformationManagement">
-        <plugin name="Improntus_Moova::PaymentInformationManagement" sortOrder="10" type="Improntus\Moova\Plugin\Checkout\Model\PaymentInformationManagement"/>
-    </type>
-    <type name="Magento\Customer\Model\ResourceModel\AddressRepository">
-        <plugin name="Improntus_Moova::AddressRepository" type="Improntus\Moova\Plugin\Customer\AddressRepositoryPlugin" sortOrder="100"/>
-    </type>
     <preference for="Magento\Shipping\Helper\Data" type="Improntus\Moova\Helper\Shipping\Data"/>
     <preference for="Magento\Shipping\Block\Items" type="Improntus\Moova\Block\Items"/>
 </config>

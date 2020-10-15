@@ -202,8 +202,9 @@ class Data extends AbstractHelper
         return $this->_scopeConfig->getValue('shipping/moova_webservice/tracking/enable_status', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
-    public static function getDestination($shippingAddress, $countryInfo, $_scopeConfig)
+    public static function getDestination($shippingAddress, $countryInfo, $_scopeConfig, $input = null)
     {
+        Log::info('getDestination - parameters received:' . json_encode($shippingAddress));
         $checkoutFields = [
             'address',
             'street',
@@ -216,30 +217,61 @@ class Data extends AbstractHelper
         ];
 
         foreach ($checkoutFields as $field) {
-            $key = $_scopeConfig->getValue("shipping/moova_webservice/moova_checkout/$field", \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-            $value = isset($shippingAddress[$key]) ? $shippingAddress[$key] : '';
-            $value = explode("\n", $value);
-            $response[$field] = array_shift($value);
-            $response['apartment'] = implode('', $value);
+            $value = self::getCheckoutField($shippingAddress, $_scopeConfig, $field, $input);
+            $response[$field] = empty($value) ? '' : array_shift($value);
         }
 
-        if (!empty($response['address'])) {
-            $countryName = $countryInfo->getName();
-            $toAppend = ['city', 'state'];
-            foreach ($toAppend as $item) {
-                $value = $response[$item];
-                if (!empty($value)) {
-                    $response['address'] .= ",$value";
-                }
-            }
-            $response['address'] .= ",$countryName";
-            unset($response['city']);
-            unset($response['state']);
-        }
+        Log::info('getDestination - response' . json_encode($response));
 
         $response['country'] = $countryInfo->getData('iso3_code');
-        Log::info('getDestination - parameters received:' . json_encode($shippingAddress));
-        Log::info('getDestination - destination fields:' . json_encode($response));
+        if (empty($response['address'])) {
+            if (empty($response['street']) || empty($response['number'])) {
+                unset($response['street']);
+                unset($response['number']);
+            }
+            unset($response['address']);
+            return $response;
+        }
+
+        $toAppend = ['city', 'state'];
+        foreach ($toAppend as $item) {
+            $value = $response[$item];
+            if (!empty($value)) {
+                $response['address'] .= ",$value";
+            }
+        }
+
+        $countryName = $countryInfo->getName();
+        $response['address'] .= ",$countryName";
         return $response;
+    }
+
+    private static function getCheckoutField($shippingAddress, $_scopeConfig, $field, $input = null)
+    {
+        $key = $_scopeConfig->getValue("shipping/moova_webservice/moova_checkout/$field", \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+        $value = isset($shippingAddress[$key]) ? $shippingAddress[$key] : '';
+        if (!empty($value)) {
+            return is_string($value) ? explode("\n", $value) : $value;
+        }
+        if (!empty($shippingAddress[$key])) {
+            $value = $shippingAddress[$key];
+        } elseif (!empty($input['extension_attributes'][$key])) {
+            $value = $input['extension_attributes'][$key];
+        } elseif (!empty($input['custom_attributes'])) {
+            $value = self::findByCode($input['custom_attributes'], $key);
+        } elseif (!empty($input['customAttributes'])) {
+            $value = self::findByCode($input['customAttributes'], $key);
+        }
+        return is_string($value) ? explode("\n", $value) : $value;
+    }
+
+
+    private static function findByCode($attributes, $key)
+    {
+        foreach ($attributes as $attribute) {
+            if ($attribute['attribute_code'] == $key) {
+                return explode("\n", $attribute['value']);
+            }
+        }
     }
 }

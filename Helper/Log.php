@@ -38,11 +38,18 @@ class Log extends AbstractHelper
      * @param $mensaje String
      * @param $archivo String
      */
-    public static function info($mensaje)
+    public static function info($message)
     {
+        $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+        $isLogEnabled = $objectManager->get('Magento\Framework\App\Config\ScopeConfigInterface')
+            ->getValue('shipping/moova_webservice/enable_log');
+        if (!$isLogEnabled) {
+            return true;
+        }
+
         $writer = new \Zend\Log\Writer\Stream(BP . '/var/log/info_moova_' . date('m_Y') . '.log');
         $logger = new \Zend\Log\Logger();
         $logger->addWriter($writer);
-        $logger->info($mensaje);
+        $logger->info($message);
     }
 }

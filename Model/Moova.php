@@ -6,6 +6,7 @@ use Improntus\Moova\Helper\Data as HelperMoova;
 use Magento\Sales\Model\Convert\Order as ConvertOrder;
 use \Magento\Directory\Model\Country;
 use Improntus\Moova\Helper\Data;
+use Improntus\Moova\Helper\Log;
 
 /**
  * Class Moova
@@ -220,7 +221,7 @@ class Moova
             ];
 
             $shipmentMoova = $this->_webService->newShipment($shippingParams);
-
+            Log::info("doShipment - shipmentMoova" . json_encode($shipmentMoova));
             if ($shipmentMoova === false) {
                 return false;
             }

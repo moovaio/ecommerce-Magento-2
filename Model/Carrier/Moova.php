@@ -299,6 +299,16 @@ class Moova extends AbstractCarrierOnline implements CarrierInterface
 
         $countryId = $shippingAddress['country_id'] ? $shippingAddress['country_id'] : $request->getDestCountryId();
         $countryInfo = $this->_country->loadByCode($countryId);
+        $input = json_decode(file_get_contents('php://input'), true);
+        Log::info("collectRates - input:" . json_encode($input));
+        if (isset($input['addressInformation'])) {
+            $input = $input['addressInformation']['shipping_address'];
+        } elseif (isset($input['billingAddress'])) {
+            $input = $input['billingAddress'];
+        } elseif (isset($input['address'])) {
+            $input = $input['address'];
+        }
+        Log::info("collectRates - shippingAddress:" . json_encode($shippingAddress->getData()));
 
         $shipping = [
             'from' => [
@@ -311,7 +321,12 @@ class Moova extends AbstractCarrierOnline implements CarrierInterface
                 'postalCode' => $this->_scopeConfig->getValue('shipping/moova_webservice/from/postcode', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
                 'country' => $countryInfo->getData('iso3_code')
             ],
-            'to' => Data::getDestination($shippingAddress->getData(), $countryInfo, $this->_scopeConfig),
+            'to' => Data::getDestination(
+                $shippingAddress->getData(),
+                $countryInfo,
+                $this->_scopeConfig,
+                $input
+            ),
             'conf' => [
                 'assurance' => false,
                 'items'     => $itemsWsMoova
@@ -335,48 +350,6 @@ class Moova extends AbstractCarrierOnline implements CarrierInterface
         $result->append($error);
 
         return $result;
-    }
-
-    private function getDestination($shippingAddress, $countryInfo)
-    {
-        $checkoutFields = [
-            'address',
-            'street',
-            'number',
-            'floor',
-            'city',
-            'state',
-            'postalCode',
-            'floor'
-        ];
-        $response = [];
-
-        foreach ($checkoutFields as $field) {
-            $key = $this->_scopeConfig->getValue("shipping/moova_webservice/moova_checkout/$field", \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-            $value = isset($shippingAddress[$key]) ? $shippingAddress[$key] : '';
-            $value = explode("\n", $value);
-            $response[$field] = array_shift($value);
-            $response['apartment'] = implode('', $value);
-        }
-
-        if (!empty($response['address'])) {
-            $countryName = $countryInfo->getName();
-            $toAppend = ['city', 'state'];
-            foreach ($toAppend as $item) {
-                $value = $response[$item];
-                if (!empty($value)) {
-                    $response['address'] .= ",$value";
-                }
-            }
-            $response['address'] .= ",$countryName";
-            unset($response['city']);
-            unset($response['state']);
-        }
-
-        $response['country'] = $countryInfo->getData('iso3_code');
-        Log::info('getDestination - parameters received:' . json_encode($shippingAddress));
-        Log::info('getDestination - destination fields:' . json_encode($response));
-        return $response;
     }
 
     /**
