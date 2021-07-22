@@ -335,7 +335,7 @@ class Moova extends AbstractCarrierOnline implements CarrierInterface
         Log::info('collectRates - sending to Moova: ' . json_encode($shipping));
         $costoEnvio = $webservice->getBudget($shipping, 1);
         Log::info('collectRates - received from Moova' . json_encode($costoEnvio));
-        if ($costoEnvio !== false) {
+        if ($costoEnvio != null && $costoEnvio !== false) {
             $method->setPrice($costoEnvio);
             $method->setCost($costoEnvio);
 
