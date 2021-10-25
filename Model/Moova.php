@@ -111,11 +111,9 @@ class Moova
      */
     public function doShipment($order)
     {
-        Log::info('Getting order');
         if (!$order->canShip()) {
             return false;
         }
-        Log::info('dOING SHIPPING');
 
         $shippingAddress = $order->getShippingAddress();
         $shipment = $this->_shipmentFactory->create($order);

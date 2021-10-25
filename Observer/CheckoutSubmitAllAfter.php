@@ -11,7 +11,7 @@ use Improntus\Moova\Helper\Log;
  * @author Improntus <http://www.improntus.com> - Ecommerce done right
  * @package Ids\Andreani\Observer
  */
-class SalesOrderSaveAfter implements ObserverInterface
+class CheckoutSubmitAllAfter implements ObserverInterface
 {
 
     /**
