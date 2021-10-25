@@ -97,18 +97,25 @@ class Moova
         $this->_country = $country;
     }
 
+
+    public function doShipmentWithOrderId($orderId)
+    {
+        $order = $this->_orderRepository->get($orderId);
+        return $this->doShipment($order);
+    }
+
     /**
      * @param $orderId
      * @return bool|string
      * @throws \Magento\Framework\Exception\LocalizedException
      */
-    public function doShipment($orderId)
+    public function doShipment($order)
     {
-        $order = $this->_orderRepository->get($orderId);
-
+        Log::info('Getting order');
         if (!$order->canShip()) {
             return false;
         }
+        Log::info('dOING SHIPPING');
 
         $shippingAddress = $order->getShippingAddress();
         $shipment = $this->_shipmentFactory->create($order);

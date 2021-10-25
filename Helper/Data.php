@@ -222,13 +222,12 @@ class Data extends AbstractHelper
         }
 
         Log::info('getDestination - response' . json_encode($response));
-
-        $response['country'] = $countryInfo->getData('iso3_code');
+        $response['country'] = $countryInfo->getCountryId();
+        if (empty($response['street']) || empty($response['number'])) {
+            unset($response['street']);
+            unset($response['number']);
+        }
         if (empty($response['address'])) {
-            if (empty($response['street']) || empty($response['number'])) {
-                unset($response['street']);
-                unset($response['number']);
-            }
             unset($response['address']);
             return $response;
         }

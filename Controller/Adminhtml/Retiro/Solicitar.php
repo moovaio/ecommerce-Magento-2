@@ -40,14 +40,12 @@ class Solicitar extends \Magento\Backend\App\Action
      * @param ResultFactory $resultFactory
      * @param \Magento\Framework\Message\ManagerInterface $manager
      */
-    public function __construct
-    (
+    public function __construct(
         Action\Context $context,
         \Improntus\Moova\Model\Moova $moova,
         \Magento\Framework\Controller\ResultFactory $resultFactory,
         \Magento\Framework\Message\ManagerInterface $manager
-    )
-    {
+    ) {
         $this->_moova = $moova;
         $this->_resultRedirect = $resultFactory;
         $this->messageManager = $manager;
@@ -63,17 +61,14 @@ class Solicitar extends \Magento\Backend\App\Action
         $request = $this->getRequest();
         $orderId = $request->getParam('order_id');
 
-        try
-        {
-            $shipment = $this->_moova->doShipment($orderId);
+        try {
+            $shipment = $this->_moova->doShipmentWithOrderId($orderId);
 
-            if($shipment)
+            if ($shipment)
                 $this->messageManager->addSuccessMessage($shipment);
             else
                 $this->messageManager->addErrorMessage(__('Se produjo un error al generar el envío MOOVA. Por favor intentelo nuevamente'));
-        }
-        catch (\Exception $e)
-        {
+        } catch (\Exception $e) {
             $this->messageManager->addErrorMessage($e->getMessage());
         }
 
@@ -83,5 +78,3 @@ class Solicitar extends \Magento\Backend\App\Action
         return $resultRedirect;
     }
 }
-
-
