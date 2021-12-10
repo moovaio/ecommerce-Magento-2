@@ -205,63 +205,52 @@ class Data extends AbstractHelper
     public static function getDestination($shippingAddress, $countryInfo, $_scopeConfig, $input = null)
     {
         Log::info('getDestination - parameters received:' . json_encode($shippingAddress));
-        $checkoutFields = [
-            'address',
-            'street',
-            'number',
-            'floor',
-            'city',
-            'state',
-            'postalCode',
-            'floor'
-        ];
+        $moovaCheckoutFields = [ 'address', 'street', 'number', 'floor', 'city', 'state', 'postalCode','floor' ];
+        $destination = [];
 
-        foreach ($checkoutFields as $field) {
-            $value = self::getCheckoutField($shippingAddress, $_scopeConfig, $field, $input);
-            $response[$field] = empty($value) ? '' : array_shift($value);
+        foreach ($moovaCheckoutFields as $field) {
+            $value = self::getCheckoutValue($shippingAddress, $_scopeConfig, $field, $input);
+            $destination[$field] = str_replace("\n", ' ', $value);
         }
 
-        Log::info('getDestination - response' . json_encode($response));
-        $response['country'] = $countryInfo->getCountryId();
-        if (empty($response['street']) || empty($response['number'])) {
-            unset($response['street']);
-            unset($response['number']);
-        }
-        if (empty($response['address'])) {
-            unset($response['address']);
-            return $response;
+        $destination['country'] = $countryInfo->getCountryId();
+
+        if(!empty($destination['address'])){
+            $destination['address'] .= ',' . $countryInfo->getName();
         }
 
-        $toAppend = ['city', 'state'];
-        foreach ($toAppend as $item) {
-            $value = $response[$item];
-            if (!empty($value)) {
-                $response['address'] .= ",$value";
-            }
-        }
-
-        $countryName = $countryInfo->getName();
-        $response['address'] .= ",$countryName";
-        return $response;
+        Log::info('getDestination - response' . json_encode($destination));
+        return $destination;
     }
 
-    private static function getCheckoutField($shippingAddress, $_scopeConfig, $field, $input = null)
+    private static function getCheckoutValue($shippingAddress, $_scopeConfig, $field, $input = null)
     {
-        $key = $_scopeConfig->getValue("shipping/moova_webservice/moova_checkout/$field", \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
-        $value = isset($shippingAddress[$key]) ? $shippingAddress[$key] : '';
-        if (!empty($value)) {
-            return is_string($value) ? explode("\n", $value) : $value;
+        $value = self::getFieldFromMagentoDefaultCheckout($shippingAddress, $_scopeConfig, $field);
+        if(empty($value)){
+            return self::getFieldFromCustomCheckout($shippingAddress, $_scopeConfig, $field, $input);
         }
-        if (!empty($shippingAddress[$key])) {
-            $value = $shippingAddress[$key];
-        } elseif (!empty($input['extension_attributes'][$key])) {
+        return $value;
+        
+    }
+
+    private static function getFieldFromMagentoDefaultCheckout($shippingAddress, $_scopeConfig, $field){
+        $keySpecialMapping = $_scopeConfig->getValue("shipping/moova_webservice/moova_checkout/$field", \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+        $value = isset($shippingAddress[$keySpecialMapping]) ?  $shippingAddress[$keySpecialMapping] : null;
+        return $value;
+    }
+
+    //Returns in case the development team changed a name in the checkout or created a custom prop in it
+    private static function getFieldFromCustomCheckout($shippingAddress, $_scopeConfig, $field, $input){
+        $key = $_scopeConfig->getValue("shipping/moova_webservice/moova_checkout/$field", \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
+        $value = null;
+        if (!empty($input['extension_attributes'][$key])) {
             $value = $input['extension_attributes'][$key];
         } elseif (!empty($input['custom_attributes'])) {
             $value = self::findByCode($input['custom_attributes'], $key);
         } elseif (!empty($input['customAttributes'])) {
             $value = self::findByCode($input['customAttributes'], $key);
         }
-        return is_string($value) ? explode("\n", $value) : $value;
+        return $value;
     }
 
 
@@ -269,7 +258,7 @@ class Data extends AbstractHelper
     {
         foreach ($attributes as $attribute) {
             if ($attribute['attribute_code'] == $key) {
-                return explode("\n", $attribute['value']);
+                return str_replace("\n", ' ',$attribute['value']);
             }
         }
     }

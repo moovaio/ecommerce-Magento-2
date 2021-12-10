@@ -321,12 +321,7 @@ class Moova extends AbstractCarrierOnline implements CarrierInterface
                 'postalCode' => $this->_scopeConfig->getValue('shipping/moova_webservice/from/postcode', \Magento\Store\Model\ScopeInterface::SCOPE_STORE),
                 'country' => $countryId
             ],
-            'to' => Data::getDestination(
-                $shippingAddress->getData(),
-                $countryInfo,
-                $this->_scopeConfig,
-                $input
-            ),
+            'to' => Data::getDestination($shippingAddress->getData(), $countryInfo, $this->_scopeConfig, $input),
             'conf' => [
                 'assurance' => false,
                 'items'     => $itemsWsMoova
