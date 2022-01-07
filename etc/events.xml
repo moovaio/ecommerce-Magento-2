@@ -3,7 +3,7 @@
     <event name="sales_order_place_before">
         <observer name="Improntus_Moova::SalesOrderPlaceBefore" instance="Improntus\Moova\Observer\SalesOrderPlaceBefore"/>
     </event>
-    <event name="checkout_submit_all_after">
-        <observer name="Improntus_Moova::CheckoutSubmitAllAfter" instance="Improntus\Moova\Observer\CheckoutSubmitAllAfter"/>
+    <event name="sales_order_save_after">
+        <observer name="Improntus_Moova::SalesOrderSaveAfter" instance="Improntus\Moova\Observer\SalesOrderSaveAfter"/>
     </event>
 </config>

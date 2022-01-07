@@ -94,7 +94,8 @@
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     </field>
                 </group>
-                <group id='moova_checkout' translate="label" type="text" sortOrder="500" showInDefault="1" showInWebsite="1" showInStore="1">
+
+                <group id='moova_checkout' translate="label" type="text" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Custom checkout mapping to moova</label>
                     <field id="address" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Address</label>        
@@ -123,6 +124,17 @@
                     <field id="postalCode" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>postalCode</label>        
                         <source_model>Improntus\Moova\Model\Source\CheckoutOptions</source_model>
+                    </field>
+                </group>
+                <group id='moova_send_status' translate="label" type="text" sortOrder="800" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Informar estado a Moova</label>
+                    <field id="create_order_status" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Create order Status</label>        
+                        <source_model>Improntus\Moova\Model\Source\StatusOptions</source_model>
+                    </field>
+                    <field id="send_ready_status" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Inform its ready</label>        
+                        <source_model>Improntus\Moova\Model\Source\StatusOptions</source_model>
                     </field>
                 </group>
             </group>

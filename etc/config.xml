@@ -27,6 +27,10 @@
                     <state>region</state>
                     <postalCode>postcode</postalCode>
                 </moova_checkout>
+                <moova_send_status>
+                    <create_order_status></create_order_status>
+                    <send_ready_status></send_ready_status>
+                </moova_send_status>
             </moova_webservice>
         </shipping>
     </default>

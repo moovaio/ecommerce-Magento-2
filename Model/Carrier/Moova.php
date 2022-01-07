@@ -371,7 +371,7 @@ class Moova extends AbstractCarrierOnline implements CarrierInterface
             curl_setopt($ch, CURLOPT_POST, 1);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $xmlRequest);
             curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, (bool)$this->getConfigFlag('mode_xml'));
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, (bool) $this->getConfigFlag('mode_xml'));
             $xmlResponse = curl_exec($ch);
             if ($xmlResponse === false) {
                 throw new \Exception(curl_error($ch));

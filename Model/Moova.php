@@ -231,13 +231,13 @@ class Moova
                 return false;
             }
 
-            $trackingMoova = substr($shipmentMoova['id'], 0, 8);
+            $trackingMoova = $shipmentMoova['id'];
             $mensajeEstado = __('La solicitud de retiro moova fue creada correctamente. Código de seguimiento Moova: %1', $trackingMoova);
 
             $history = $order->addStatusHistoryComment($mensajeEstado);
             $history->setIsVisibleOnFront(true);
             $history->setIsCustomerNotified(true);
-            $history->save();
+           
 
             $carrier = $this->_carrierFactory->create($order->getShippingMethod(true)->getCarrierCode());
             $carrierCode = $carrier->getCarrierCode();
@@ -253,10 +253,12 @@ class Moova
             $shipment->setCustomerNoteNotify(false);
             $shipment->save();
             $shipment->getOrder()->save();
+            $history->save();
             $this->_shipmentNotifier->notify($shipment);
 
             return $mensajeEstado;
         } catch (\Exception $e) {
+            Log::info($e);
             throw new \Magento\Framework\Exception\LocalizedException(
                 __($e->getMessage())
             );

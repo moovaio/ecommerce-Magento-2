@@ -54,7 +54,7 @@ class Data extends \Magento\Shipping\Helper\Data
             if (count($shipmentCollection) == 1) {
                 $shipmentInfo = json_decode($model->getShipmentsCollection()->getData()[0]['customer_note']);
 
-                $trackingNumber = substr($shipmentInfo->id, 0, 8);
+                $trackingNumber = $shipmentInfo->id;
 
                 $url = $this->scopeConfig->getValue('shipping/moova_webservice/tracking/url') . "$trackingNumber";
 
@@ -62,10 +62,10 @@ class Data extends \Magento\Shipping\Helper\Data
             }
         }
 
-        if ($model->getEntityType() == 'shipment' && $model->getOrder()->getShippingMethod() == 'moova_moova') {
+        if ($model->getEntityType() == 'shipment' && !empty($model->getOrder()) &&$model->getOrder()->getShippingMethod() == 'moova_moova') {
             $shipmentInfo = json_decode($model->getCustomerNote());
 
-            $trackingNumber = substr($shipmentInfo->id, 0, 8);
+            $trackingNumber = $shipmentInfo->id;
 
             $url = $this->scopeConfig->getValue('shipping/moova_webservice/tracking/url') . "$trackingNumber";
 
