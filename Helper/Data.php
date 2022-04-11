@@ -216,6 +216,15 @@ class Data extends AbstractHelper
         $destination['country'] = $countryInfo->getCountryId();
 
         if(!empty($destination['address'])){
+
+            if(!empty($destination['city'])){
+                $destination['address'] .= ','. $destination['city'];
+            }
+
+            if(!empty($destination['state'])){
+                $destination['address'] .= ','. $destination['state'];
+            }
+            
             $destination['address'] .= ',' . $countryInfo->getName();
         }
 
